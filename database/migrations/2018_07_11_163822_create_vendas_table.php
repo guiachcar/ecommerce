@@ -26,8 +26,13 @@ class CreateVendasTable extends Migration
 			$table->foreign('user_id')
 				->references('id')
 				->on('users')
-				->onDelete('cascade');	
-            $table->timestamps();
+				->onDelete('cascade');
+			$table->integer('venda_concluida_id')->unsigned()->nullable();
+			$table->foreign('venda_concluida_id')
+				->references('id')
+				->on('venda_concluidas')
+				->onDelete('cascade');
+			$table->timestamps();
 		});
 	}
 

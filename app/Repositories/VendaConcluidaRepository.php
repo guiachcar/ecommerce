@@ -5,11 +5,11 @@ namespace App\Repositories;
 use Prettus\Repository\Contracts\RepositoryInterface;
 
 /**
- * Interface VendaRepository.
+ * Interface VendaConcluidaRepository.
  *
  * @package namespace App\Repositories;
  */
-interface VendaRepository extends RepositoryInterface
+interface VendaConcluidaRepository extends RepositoryInterface
 {
-    public function produtos($user);
+    //
 }

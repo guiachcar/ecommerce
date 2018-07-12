@@ -7,11 +7,11 @@ use Prettus\Repository\Contracts\Transformable;
 use Prettus\Repository\Traits\TransformableTrait;
 
 /**
- * Class Venda.
+ * Class VendaConcluida.
  *
  * @package namespace App\Entities;
  */
-class Venda extends Model implements Transformable
+class VendaConcluida extends Model implements Transformable
 {
     use TransformableTrait;
 
@@ -20,12 +20,6 @@ class Venda extends Model implements Transformable
      *
      * @var array
      */
-    protected $fillable = ['produto_id','user_id'];
-
-    public function produtos()
-    {
-        return $this->hasOne('App\Entities\Produto', 'id', 'produto_id');
-    }
-
+    protected $fillable = ['user_id','valor'];
 
 }

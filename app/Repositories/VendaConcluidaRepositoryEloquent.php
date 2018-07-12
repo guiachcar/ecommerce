@@ -4,16 +4,16 @@ namespace App\Repositories;
 
 use Prettus\Repository\Eloquent\BaseRepository;
 use Prettus\Repository\Criteria\RequestCriteria;
-use App\Repositories\VendaRepository;
-use App\Entities\Venda;
-use App\Validators\VendaValidator;
+use App\Repositories\VendaConcluidaRepository;
+use App\Entities\VendaConcluida;
+use App\Validators\VendaConcluidaValidator;
 
 /**
- * Class VendaRepositoryEloquent.
+ * Class VendaConcluidaRepositoryEloquent.
  *
  * @package namespace App\Repositories;
  */
-class VendaRepositoryEloquent extends BaseRepository implements VendaRepository
+class VendaConcluidaRepositoryEloquent extends BaseRepository implements VendaConcluidaRepository
 {
     /**
      * Specify Model class name
@@ -22,7 +22,7 @@ class VendaRepositoryEloquent extends BaseRepository implements VendaRepository
      */
     public function model()
     {
-        return Venda::class;
+        return VendaConcluida::class;
     }
 
     /**
@@ -33,7 +33,7 @@ class VendaRepositoryEloquent extends BaseRepository implements VendaRepository
     public function validator()
     {
 
-        return VendaValidator::class;
+        return VendaConcluidaValidator::class;
     }
 
 
@@ -43,11 +43,6 @@ class VendaRepositoryEloquent extends BaseRepository implements VendaRepository
     public function boot()
     {
         $this->pushCriteria(app(RequestCriteria::class));
-    }
-
-    public function produtos($user)
-    {
-        return Venda::where('user_id',$user->id)->whereNull('venda_concluida_id')->get();
     }
     
 }

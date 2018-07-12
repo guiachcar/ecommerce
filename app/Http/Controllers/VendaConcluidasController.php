@@ -7,38 +7,45 @@ use Illuminate\Http\Request;
 use App\Http\Requests;
 use Prettus\Validator\Contracts\ValidatorInterface;
 use Prettus\Validator\Exceptions\ValidatorException;
-use App\Http\Requests\VendaCreateRequest;
-use App\Http\Requests\VendaUpdateRequest;
+use App\Http\Requests\VendaConcluidaCreateRequest;
+use App\Http\Requests\VendaConcluidaUpdateRequest;
+use App\Repositories\VendaConcluidaRepository;
 use App\Repositories\VendaRepository;
-use App\Validators\VendaValidator;
+use App\Validators\VendaConcluidaValidator;
 
 /**
- * Class VendasController.
+ * Class VendaConcluidasController.
  *
  * @package namespace App\Http\Controllers;
  */
-class VendasController extends Controller
+class VendaConcluidasController extends Controller
 {
     /**
-     * @var VendaRepository
+     * @var VendaConcluidaRepository
      */
     protected $repository;
 
     /**
-     * @var VendaValidator
+     * @var VendaRepository
+     */
+    protected $venda_repository;
+
+    /**
+     * @var VendaConcluidaValidator
      */
     protected $validator;
 
     /**
-     * VendasController constructor.
+     * VendaConcluidasController constructor.
      *
-     * @param VendaRepository $repository
-     * @param VendaValidator $validator
+     * @param VendaConcluidaRepository $repository
+     * @param VendaConcluidaValidator $validator
      */
-    public function __construct(VendaRepository $repository, VendaValidator $validator)
+    public function __construct(VendaConcluidaRepository $repository, VendaConcluidaValidator $validator, VendaRepository $venda_repository)
     {
         $this->repository = $repository;
         $this->validator  = $validator;
+        $this->venda_repository = $venda_repository;
     }
 
     /**
@@ -46,78 +53,79 @@ class VendasController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
+    public function cupons()
+    {
+        $contents = file_get_contents("http://178.128.148.90:5000/cupoms");
+        $cupons = json_decode($contents);
+        $cupons = $cupons->cupoms;
+        $user = \Auth::user();
+        foreach($cupons as $cpm)
+        {
+            if($cpm->email == $user->email)
+            {
+                $cpm_user[] = $cpm;
+            }
+        }
+        return view('cupons.index', compact('cpm_user'));
 
+    }
 
-     public function index()
+    public function finalizar()
+    {
+        $user = \Auth::user();
+        $vendas = $this->venda_repository->produtos($user);
+        $valor =0;
+        foreach ($vendas as $produto)
+        {
+            $valor = $valor + $produto->produtos->valor;
+        }
+        $req['user_id'] = $user->id;
+        $req['valor'] = $valor;
+        $vendaConcluida = $this->repository->create($req);
+        foreach ($vendas as $venda)
+        {
+            $venda->venda_concluida_id = $vendaConcluida->id;
+            $venda->save();
+        }
+        $mensagem = 'Compra concluida';
+        return redirect()->route('home', compact('mensagem'));
+    }
+   
+    public function index()
     {
         $this->repository->pushCriteria(app('Prettus\Repository\Criteria\RequestCriteria'));
-        $vendas = $this->repository->all();
+        $vendaConcluidas = $this->repository->all();
 
         if (request()->wantsJson()) {
 
             return response()->json([
-                'data' => $vendas,
+                'data' => $vendaConcluidas,
             ]);
         }
 
-        return view('vendas.index', compact('vendas'));
+        return view('vendaConcluidas.index', compact('vendaConcluidas'));
     }
 
     /**
      * Store a newly created resource in storage.
      *
-     * @param  VendaCreateRequest $request
+     * @param  VendaConcluidaCreateRequest $request
      *
      * @return \Illuminate\Http\Response
      *
      * @throws \Prettus\Validator\Exceptions\ValidatorException
      */
-    public function store(VendaCreateRequest $request)
+    public function store(VendaConcluidaCreateRequest $request)
     {
-        
         try {
 
-            $this->validator->with($request->all()->passesOrFail(ValidatorInterface::RULE_CREATE));
+            $this->validator->with($request->all())->passesOrFail(ValidatorInterface::RULE_CREATE);
 
-            $venda = $this->repository->create($request->all());
-
-            $response = [
-                'message' => 'Venda created.',
-                'data'    => $venda->toArray(),
-            ];
-
-            if ($request->wantsJson()) {
-
-                return response()->json($response);
-            }
-
-            return redirect()->back()->with('message', $response['message']);
-        } catch (ValidatorException $e) {
-            if ($request->wantsJson()) {
-                return response()->json([
-                    'error'   => true,
-                    'message' => $e->getMessageBag()
-                ]);
-            }
-
-            return redirect()->back()->withErrors($e->getMessageBag())->withInput();
-        }
-    }
-
-    public function comprar(Request $request)
-    {
-        
-        $request1['user_id'] = \Auth::user()->id;
-        $request1['produto_id'] = $request->id;
-
-        try {
-
-            
-            $venda = $this->repository->create($request1);
+            $vendaConcluida = $this->repository->create($request->all());
 
             $response = [
-                'message' => 'Venda created.',
-                'data'    => $venda->toArray(),
+                'message' => 'VendaConcluida created.',
+                'data'    => $vendaConcluida->toArray(),
             ];
 
             if ($request->wantsJson()) {
@@ -147,16 +155,16 @@ class VendasController extends Controller
      */
     public function show($id)
     {
-        $venda = $this->repository->find($id);
+        $vendaConcluida = $this->repository->find($id);
 
         if (request()->wantsJson()) {
 
             return response()->json([
-                'data' => $venda,
+                'data' => $vendaConcluida,
             ]);
         }
 
-        return view('vendas.show', compact('venda'));
+        return view('vendaConcluidas.show', compact('vendaConcluida'));
     }
 
     /**
@@ -168,32 +176,32 @@ class VendasController extends Controller
      */
     public function edit($id)
     {
-        $venda = $this->repository->find($id);
+        $vendaConcluida = $this->repository->find($id);
 
-        return view('vendas.edit', compact('venda'));
+        return view('vendaConcluidas.edit', compact('vendaConcluida'));
     }
 
     /**
      * Update the specified resource in storage.
      *
-     * @param  VendaUpdateRequest $request
+     * @param  VendaConcluidaUpdateRequest $request
      * @param  string            $id
      *
      * @return Response
      *
      * @throws \Prettus\Validator\Exceptions\ValidatorException
      */
-    public function update(VendaUpdateRequest $request, $id)
+    public function update(VendaConcluidaUpdateRequest $request, $id)
     {
         try {
 
             $this->validator->with($request->all())->passesOrFail(ValidatorInterface::RULE_UPDATE);
 
-            $venda = $this->repository->update($request->all(), $id);
+            $vendaConcluida = $this->repository->update($request->all(), $id);
 
             $response = [
-                'message' => 'Venda updated.',
-                'data'    => $venda->toArray(),
+                'message' => 'VendaConcluida updated.',
+                'data'    => $vendaConcluida->toArray(),
             ];
 
             if ($request->wantsJson()) {
@@ -231,11 +239,11 @@ class VendasController extends Controller
         if (request()->wantsJson()) {
 
             return response()->json([
-                'message' => 'Venda deleted.',
+                'message' => 'VendaConcluida deleted.',
                 'deleted' => $deleted,
             ]);
         }
 
-        return redirect()->back()->with('message', 'Venda deleted.');
+        return redirect()->back()->with('message', 'VendaConcluida deleted.');
     }
 }
