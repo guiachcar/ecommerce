@@ -55,7 +55,7 @@ class VendaConcluidasController extends Controller
      */
     public function cupons()
     {
-        $contents = file_get_contents("http://172.22.0.2/cupoms");
+        $contents = file_get_contents("http://172.22.0.2:5000/cupoms");
         $cupons = json_decode($contents);
         $cupons = $cupons->cupoms;
         $user = \Auth::user();
