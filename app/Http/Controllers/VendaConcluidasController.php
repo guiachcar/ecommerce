@@ -55,8 +55,15 @@ class VendaConcluidasController extends Controller
      */
     public function cupons()
     {
-        $contents = file_get_contents("http://172.22.0.2:5000/cupoms");
-        $cupons = json_decode($contents);
+        
+        $url = 'http://178.128.148.90:5000/cupoms';
+        $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 5);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        $data = curl_exec($ch);
+        curl_close($ch);
+        $cupons = json_decode($data);
         $cupons = $cupons->cupoms;
         $user = \Auth::user();
         foreach($cupons as $cpm)
