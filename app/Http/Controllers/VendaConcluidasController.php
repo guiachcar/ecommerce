@@ -56,15 +56,24 @@ class VendaConcluidasController extends Controller
     public function cupons()
     {
         
-        $url = 'http://178.128.148.90:5000/cupoms';
-        $ch = curl_init($url);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 5);
-        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        $data = curl_exec($ch);
-        curl_close($ch);
-        $cupons = json_decode($data);
-        $cupons = $cupons->cupoms;
+        $url = "http://178.128.148.90:5000/cupoms";
+        $client = new \GuzzleHttp\Client();
+        try{
+            $response = $client->request('GET', $url, [
+                \GuzzleHttp\RequestOptions::JSON => ['foo' => 'bar']
+            ]);
+            
+        } catch (\GuzzleHttp\Exception\RequestException $e) {
+            $this->statusCode = $e->getCode();
+            return false;
+        }
+        if($response->getStatusCode() == 200)
+        {
+            $data = json_decode($response->getBody()->getContents());
+        }else{
+            return false;
+        }
+        $cupons = $data->cupoms;
         $user = \Auth::user();
         foreach($cupons as $cpm)
         {
